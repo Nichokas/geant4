@@ -1,0 +1,31 @@
+name: Auto-Sync Upstream Spec
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-spec:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone our repo
+        uses: actions/checkout@v4
+
+      - name: Download CERNs spec
+        run: |
+          # Descarga la última versión del archivo directamente desde la rama master del CERN
+          curl -o geant4.spec https://raw.githubusercontent.com/Geant4/geant4/master/packaging/rpm/geant4.spec
+
+      - name: Check if changed
+        run: |
+          # Si el archivo es idéntico, no hace nada. Si cambió, hace un commit automático.
+          if git diff --quiet; then
+            echo "Up to date."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add geant4.spec
+            git commit -m "Auto-update: new upstream version of geant4.spec"
+            git push
+          fi
